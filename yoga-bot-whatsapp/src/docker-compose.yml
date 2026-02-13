@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3333:3333"
+    volumes:
+      - ./src:/app/src
+      - ./audio:/app/audio
+      - ./temp:/app/temp
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+      - VERIFY_TOKEN=${VERIFY_TOKEN}
+      - ACCESS_TOKEN=${ACCESS_TOKEN}
+      - PHONE_NUMBER_ID=${PHONE_NUMBER_ID}
+      - API_BASE_URL=${API_BASE_URL}
+      - TTS_BASE_ENDPOINT=${TTS_BASE_ENDPOINT}
+      - ALLOWED_SENDERS=${ALLOWED_SENDERS}
+      - ENG_WHISPER_ENDPOINT=${ENG_WHISPER_ENDPOINT}
+      - ENG_WHISPER_PORT=${ENG_WHISPER_PORT}
+      - ENG_TTS_ENDPOINT=${ENG_TTS_ENDPOINT}
+      - ENG_TTS_PORT=${ENG_TTS_PORT}
+      - HIN_WHISPER_ENDPOINT=${HIN_WHISPER_ENDPOINT}
+      - HIN_WHISPER_PORT=${HIN_WHISPER_PORT}
+      - HIN_TTS_ENDPOINT=${HIN_TTS_ENDPOINT}
+      - HIN_TTS_PORT=${HIN_TTS_PORT}
+      - AUDIO_SAMPLE_RATE=${AUDIO_SAMPLE_RATE}
+      - AUDIO_CHANNELS=${AUDIO_CHANNELS}
+      - AUDIO_BIT_DEPTH=${AUDIO_BIT_DEPTH}
+      - AUDIO_DIR=${AUDIO_DIR}
+      - TEMP_DIR=${TEMP_DIR}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FILE=${LOG_FILE}
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge 
