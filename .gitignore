@@ -1,0 +1,6 @@
+yoga-bot-web/.env
+yoga-bot-web/.venv/*
+yoga-bot-web/app/__pycache__/*
+yoga-bot-web/app/utils/__pycache__/*
+yoga-bot-web/app/routers/__pycache__/*
+yoga-bot-web/app/services/__pycache__/*

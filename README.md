@@ -1,4 +1,5 @@
 # YogaBot
-Yoga oriented RAG BOT
+Yoga-oriented RAG bot.
 
-'yoga-bot-whatsapp': Frontend interface of Yoga-Bot
+- **yoga-bot-whatsapp** — WhatsApp frontend (Node.js).
+- **yoga-bot-web** — Web frontend (FastAPI + browser UI). Choose language (English/Hindi), chat, voice optional.
