@@ -426,6 +426,27 @@ body::before {
     cursor: not-allowed;
 }
 
+.btn-record {
+    min-width: 120px;
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3);
+}
+
+.btn-record:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(71, 85, 105, 0.4);
+}
+
+.btn-record.recording {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    animation: recordPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes recordPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+
 /* ===================================
    Responsive
    =================================== */

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initThemeToggle();
   initButtonAnimations();
   initChat();
+  initRecording();
 });
 
 function clientId() {
@@ -226,4 +227,102 @@ function initChat() {
     } catch (_) {}
   }
   init();
+}
+
+// ---- Voice recording (like Node.js WhatsApp flow) ----
+function initRecording() {
+  const recordBtn = document.getElementById('recordBtn');
+  const langDropdown = document.getElementById('langDropdown');
+  if (!recordBtn) return;
+
+  let mediaRecorder = null;
+  let stream = null;
+  let chunks = [];
+
+  function setRecordingState(recording) {
+    recordBtn.classList.toggle('recording', recording);
+    recordBtn.querySelector('span').textContent = recording ? 'Stop' : 'Record';
+    const icon = recordBtn.querySelector('[data-lucide]');
+    if (icon) {
+      icon.setAttribute('data-lucide', recording ? 'square' : 'mic');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  }
+
+  function stopStream() {
+    if (stream) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      stream = null;
+    }
+  }
+
+  async function uploadAudio(blob) {
+    clearError();
+    setTyping(true);
+    recordBtn.disabled = true;
+    try {
+      const form = new FormData();
+      form.append('audio', blob, blob.type.indexOf('webm') >= 0 ? 'recording.webm' : 'recording.ogg');
+      form.append('client_id', clientId());
+      form.append('language', (langDropdown && langDropdown.value) || 'eng');
+
+      const r = await fetch(API + '/api/voice', { method: 'POST', body: form });
+      const data = await r.json().catch(function () { return {}; });
+
+      if (!r.ok) {
+        setError(data.detail?.message || data.detail || 'Voice request failed');
+        return;
+      }
+      addMessage(data.text, 'bot', data.products || null);
+      if (data.audio_base64) {
+        var audio = new Audio('data:audio/wav;base64,' + data.audio_base64);
+        audio.play().catch(function () {});
+      }
+    } catch (e) {
+      setError(e.message || 'Network error');
+    } finally {
+      setTyping(false);
+      recordBtn.disabled = false;
+    }
+  }
+
+  recordBtn.addEventListener('click', async function () {
+    if (this.disabled) return;
+    if (recordBtn.classList.contains('recording')) {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      setRecordingState(false);
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Microphone not supported in this browser');
+      return;
+    }
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      setError('Microphone access denied or unavailable');
+      return;
+    }
+
+    var mimeType = 'audio/webm';
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+    else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+    else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) mimeType = 'audio/ogg;codecs=opus';
+
+    chunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) chunks.push(e.data); };
+    mediaRecorder.onstop = function () {
+      stopStream();
+      if (chunks.length) {
+        var blob = new Blob(chunks, { type: mimeType });
+        uploadAudio(blob);
+      }
+      mediaRecorder = null;
+    };
+    mediaRecorder.start();
+    setRecordingState(true);
+  });
 }

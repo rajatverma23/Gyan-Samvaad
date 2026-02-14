@@ -19,7 +19,7 @@ cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-Open http://localhost:8000 . Choose language (eng/hin), then chat. Use **M** for main menu; **1** = new session, **2** = history, **3** = change language.
+Open http://localhost:8000 . Choose language (eng/hin), then chat. Use **M** for main menu; **1** = new session, **2** = history, **3** = change language. Use **Record** to send a voice message (browser mic → ASR → same chat flow as Node.js).
 
 ## API
 
@@ -44,4 +44,4 @@ docker run -p 8000:8000 -e API_BASE_URL=http://host.docker.internal:8899 yogabot
 |----------|-------------|
 | `PORT` | Server port (default 8000) |
 | `API_BASE_URL` | RAG backend base URL (e.g. `http://localhost:8899`) |
-| `TTS_BASE_ENDPOINT` | TTS service host for audio replies (optional) |
+| `TTS_BASE_ENDPOINT` | Host for TTS and ASR (Whisper/Conformer) services |
