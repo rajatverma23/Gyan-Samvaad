@@ -62,4 +62,5 @@ async def voice_message(
         text=prefix + result["text"],
         products=result.get("products"),
         audio_base64=result.get("audio_base64"),
+        user_message=user_message,
     )

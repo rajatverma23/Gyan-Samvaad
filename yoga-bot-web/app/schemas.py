@@ -15,6 +15,8 @@ class ChatResponse(BaseModel):
     text: str
     products: list[dict] | None = None
     audio_base64: str | None = None
+    user_message: str | None = None  # transcribed text for voice flow
+    user_message: str | None = None  # transcribed text from voice (for chat display)
 
 
 class SessionInfo(BaseModel):

@@ -73,7 +73,12 @@ function showPlaceholder(show) {
   if (box) box.classList.toggle('has-messages', !show);
 }
 
-function addMessage(text, who, products) {
+function formatTimestamp(date) {
+  const d = date || new Date();
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function addMessage(text, who, products, timestamp) {
   const wrap = document.getElementById('messages');
   const placeholder = document.getElementById('chatPlaceholder');
   if (wrap && placeholder) {
@@ -84,9 +89,21 @@ function addMessage(text, who, products) {
   const div = document.createElement('div');
   div.className = 'msg ' + who;
   const content = document.createElement('div');
-  content.innerHTML = escapeHtml(text).replace(/\n/g, '<br>').replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+  content.className = 'msg-content';
+  /* WhatsApp-style formatting: *bold*, _italic_, `monospace` */
+  content.innerHTML = escapeHtml(text)
+    .replace(/\n/g, '<br>')
+    .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code class="msg-code">$1</code>');
   if (who === 'bot') content.classList.add('lang');
   div.appendChild(content);
+
+  /* WhatsApp-style timestamp */
+  const ts = document.createElement('div');
+  ts.className = 'msg-timestamp';
+  ts.textContent = formatTimestamp(timestamp || new Date());
+  div.appendChild(ts);
 
   if (products && products.length) {
     products.forEach(p => {
@@ -258,11 +275,16 @@ function initRecording() {
 
   async function uploadAudio(blob) {
     clearError();
+    if (!blob || blob.size === 0) {
+      setError('No audio recorded. Try recording again.');
+      return;
+    }
     setTyping(true);
     recordBtn.disabled = true;
     try {
       const form = new FormData();
-      form.append('audio', blob, blob.type.indexOf('webm') >= 0 ? 'recording.webm' : 'recording.ogg');
+      const filename = blob.type.indexOf('webm') >= 0 ? 'recording.webm' : 'recording.ogg';
+      form.append('audio', blob, filename);
       form.append('client_id', clientId());
       form.append('language', (langDropdown && langDropdown.value) || 'eng');
 
@@ -270,9 +292,14 @@ function initRecording() {
       const data = await r.json().catch(function () { return {}; });
 
       if (!r.ok) {
-        setError(data.detail?.message || data.detail || 'Voice request failed');
+        let errMsg = 'Voice request failed';
+        if (Array.isArray(data.detail) && data.detail.length) errMsg = data.detail[0].msg || errMsg;
+        else if (data.detail && typeof data.detail === 'object' && data.detail.message) errMsg = data.detail.message;
+        else if (typeof data.detail === 'string') errMsg = data.detail;
+        setError(errMsg);
         return;
       }
+      if (data.user_message) addMessage(data.user_message, 'user');
       addMessage(data.text, 'bot', data.products || null);
       if (data.audio_base64) {
         var audio = new Audio('data:audio/wav;base64,' + data.audio_base64);
@@ -313,16 +340,19 @@ function initRecording() {
 
     chunks = [];
     mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) chunks.push(e.data); };
+    mediaRecorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
     mediaRecorder.onstop = function () {
       stopStream();
       if (chunks.length) {
         var blob = new Blob(chunks, { type: mimeType });
         uploadAudio(blob);
+      } else {
+        setError('No audio captured. Speak while recording and try again.');
       }
       mediaRecorder = null;
     };
-    mediaRecorder.start();
+    /* timeslice 250ms ensures data is emitted even for short recordings */
+    mediaRecorder.start(250);
     setRecordingState(true);
   });
 }
