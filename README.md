@@ -4,6 +4,6 @@ This repository present the fullstack package Yoga oriented ChatBot using Native
 
 [Link to Llama-3.2-3b-it checkpoints]([models/llama-3.2-3b-it/QloRA-FT](https://drive.google.com/drive/folders/1lZBkT348o20ktf61y_8J9KxU-j3X188t?usp=sharing))
 
-Place the checkpoints to the following directory: 
+Place the checkpoints to the following directory: models/llama-3.2-3b-it/QloRA-FT
 
 > yoga-bot-whatsapp: Frontend interface of Gyan-Samvaad
